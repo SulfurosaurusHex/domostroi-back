@@ -1,0 +1,14 @@
+/dist
+/node_modules
+/build
+
+.vscode/*
+!.vscode/settings.json
+!.vscode/tasks.json
+!.vscode/launch.json
+!.vscode/extensions.json
+
+.env
+.env.local
+
+future.md

@@ -1,0 +1,328 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("SUPABASE_URL")
+}
+
+//user
+model Family {
+  id         String      @id @default(uuid())
+  name       String
+  createdAt  DateTime    @default(now()) @map("created_at")
+  payed      Boolean     @default(false)
+  users      User[]      @relation("userFamily")
+  tasks      Task[]      @relation("familyTasks")
+  skills     Skill[]     @relation("familySkills")
+  traditions Tradition[] @relation("failyTraditions")
+  levels     Level[]     @relation("familyLevels")
+
+  @@map("families")
+}
+
+model User {
+  id           String           @id @default(uuid())
+  name         String           @unique
+  email        String?          @unique
+  password     String
+  xp           Int              @default(0)
+  lastEarnedXp DateTime?        @map("last_earned_xp")
+  gold         Int              @default(0)
+  createdAt    DateTime         @default(now()) @map("created_at")
+  role         Role             @default(MEMBER)
+  familyId     String           @map("family_id")
+  family       Family           @relation("userFamily", fields: [familyId], references: [id])
+  levelId      String           @map("level_id")
+  level        Level            @relation("userLevel", fields: [levelId], references: [id])
+  createdTasks Task[]           @relation("createdTask")
+  userTasks    Task[]           @relation("userTask")
+  userFeatures UserFeature[]    @relation("userFeture")
+  userSkills   UserSkill[]      @relation("userSkill")
+  tokens       Token[]          @relation("userToken")
+  completions  TaskCompletion[] @relation("userCompletion")
+  lists        List[]           @relation("userLists")
+  goals        Goal[]           @relation("userGoals")
+
+  @@map("users")
+}
+
+model Token {
+  token   String   @id @default(uuid())
+  expires DateTime
+  userId  String   @map("user_id")
+  user    User     @relation("userToken", fields: [userId], references: [id])
+
+  @@map("tokens")
+}
+
+//characteristics
+model Feature {
+  id             String         @id @default(uuid())
+  name           String
+  description    String?
+  parentBrunchId String?        @map("parent_brach_id")
+  parentFeature  Feature?       @relation("parentSubbrunch", fields: [parentBrunchId], references: [id])
+  subbrunches    Feature[]      @relation("parentSubbrunch")
+  featureSkill   FeatureSkill[] @relation("featureSkill")
+  userFeature    UserFeature[]  @relation("featureUser")
+  taskXp         TaskXp[]       @relation("featureTaskXp")
+
+  @@map("features")
+}
+
+model Skill {
+  id           String         @id @default(uuid())
+  name         String
+  description  String?
+  familyId     String         @map("family_id")
+  family       Family?        @relation("familySkills", fields: [familyId], references: [id])
+  featureSkill FeatureSkill[] @relation("skillFeature")
+  userSkill    UserSkill[]    @relation("skillUser")
+  taskXp       TaskXp[]       @relation("skillTaskXp")
+
+  @@map("skills")
+}
+
+model Level {
+  id       String  @id @default(uuid())
+  level    Int
+  name     String
+  xp       Int
+  url      String?
+  familyId String  @default(uuid())
+  family   Family? @relation("familyLevels", fields: [familyId], references: [id])
+  user     User[]  @relation("userLevel")
+
+  @@unique([level, familyId], name: "uniqueLevelFamily")
+  @@map("levels")
+}
+
+//tasks
+model Task {
+  id             String           @id @default(uuid())
+  title          String
+  description    String?
+  deadline       DateTime?
+  userId         String           @map("user_id")
+  user           User             @relation("userTask", fields: [userId], references: [id])
+  creatorId      String?          @map("creator_id")
+  creator        User?            @relation("createdTask", fields: [creatorId], references: [id])
+  difficulty     Difficulty       @default(EASY)
+  repeatPeriod   RepeatPeriod?    @map("repeat_period")
+  repeatInterval Int?             @map("repeat_interval")
+  repeatDay      DayOfWeek?       @map("repeat_day")
+  type           TaskType         @default(TODO)
+  status         TaskStatus       @default(PENDING)
+  createdAt      DateTime         @default(now()) @map("created_at")
+  isImportant    Boolean?         @map("is_important")
+  taskXp         TaskXp[]         @relation("taskXp")
+  gold           Int              @default(0)
+  familyId       String?          @map("family_id")
+  family         Family?          @relation("familyTasks", fields: [familyId], references: [id])
+  completions    TaskCompletion[] @relation("taskCompletition")
+  goalId         String?          @map("goal_id")
+  goalTask       GoalTask[]       @relation("taskGoal")
+  traditionTasks TraditionTask[]  @relation("taskTradition")
+  listTasks      ListTask[]       @relation("taskList")
+
+  @@map("tasks")
+}
+
+model Tradition {
+  id             String          @id @default(uuid())
+  title          String
+  description    String?
+  repeatPeriod   RepeatPeriod?   @map("repeat_period")
+  repeatInterval Int?            @map("repeat_interval")
+  repeatDay      DayOfWeek?      @map("repeat_day")
+  deadline       DateTime?
+  familyId       String          @map("family_id")
+  family         Family          @relation("failyTraditions", fields: [familyId], references: [id])
+  tasks          TraditionTask[] @relation("traditionTask")
+
+  @@map("traditions")
+}
+
+model Goal {
+  id          String     @id @default(uuid())
+  title       String
+  description String?
+  startDate   DateTime   @default(now()) @map("start_date")
+  deadline    DateTime?
+  progress    Int
+  userId      String
+  user        User       @relation("userGoals", fields: [userId], references: [id])
+  tasks       GoalTask[] @relation("goalTask")
+
+  @@map("goals")
+}
+
+model List {
+  id          String     @id @default(uuid())
+  title       String
+  description String?
+  deadline    DateTime?
+  userId      String     @map("user_id")
+  user        User       @relation("userLists", fields: [userId], references: [id])
+  listItems   ListItem[] @relation("listItem")
+  listTask    ListTask[] @relation("listTask")
+
+  @@unique([title, userId], name: "uniqueTitleUser")
+  @@map("lists")
+}
+
+model ListItem {
+  id          String  @id @default(uuid())
+  title       String
+  description String?
+  isCompleted Boolean @map("is_completed")
+  listId      String  @map("list_id")
+  list        List    @relation("listItem", fields: [listId], references: [id])
+
+  @@map("listItems")
+}
+
+//connection
+
+model TaskCompletion {
+  id          String   @id @default(uuid())
+  taskId      String   @map("task_id")
+  task        Task     @relation("taskCompletition", fields: [taskId], references: [id])
+  userId      String   @map("user_id")
+  user        User     @relation("userCompletion", fields: [userId], references: [id])
+  xp          Int
+  completedAt DateTime @default(now()) @map("completed_at")
+
+  @@map("taskCompletions")
+}
+
+model UserFeature {
+  xp           Int
+  lastEarnedXp DateTime @map("last_earned_xp")
+  userId       String   @map("user_id")
+  featureId    String   @map("feature_id")
+  user         User     @relation("userFeture", fields: [userId], references: [id])
+  feature      Feature  @relation("featureUser", fields: [featureId], references: [id])
+
+  @@id(name: "userFeatureId", [featureId, userId])
+  @@map("userFeatures")
+}
+
+model FeatureSkill {
+  percent   Int
+  featureId String  @map("feature_id")
+  skillId   String  @map("skill_id")
+  feature   Feature @relation("featureSkill", fields: [featureId], references: [id])
+  skill     Skill   @relation("skillFeature", fields: [skillId], references: [id])
+
+  @@id(name: "featureSkillId", [skillId, featureId])
+  @@map("featureSkills")
+}
+
+model UserSkill {
+  xp           Int
+  lastEarnedXp DateTime @map("last_earned_xp")
+  userId       String   @map("user_id")
+  skillId      String   @map("skill_id")
+  user         User     @relation("userSkill", fields: [userId], references: [id])
+  skill        Skill    @relation("skillUser", fields: [skillId], references: [id])
+
+  @@id(name: "userSkillId", [skillId, userId])
+  @@map("userSkills")
+}
+
+model TaskXp {
+  id             String   @id @default(uuid())
+  taskId         String   @map("user_id")
+  skillId        String?  @map("skill_id")
+  skillPercent   Int?     @map("skill_percent")
+  featureId      String?  @map("feature_id")
+  featurePercent Int?     @map("feature_percent")
+  task           Task     @relation("taskXp", fields: [taskId], references: [id])
+  skill          Skill?   @relation("skillTaskXp", fields: [skillId], references: [id])
+  feature        Feature? @relation("featureTaskXp", fields: [featureId], references: [id])
+
+  @@map("taskXp")
+}
+
+model GoalTask {
+  id        String  @id @default(uuid())
+  goalId    String  @map("goal_id")
+  taskId    String  @map("task_id")
+  order     Int?
+  completed Boolean @default(false)
+  goal      Goal    @relation("goalTask", fields: [goalId], references: [id])
+  task      Task    @relation("taskGoal", fields: [taskId], references: [id])
+
+  @@map("goalTasks")
+}
+
+model TraditionTask {
+  id          String    @id @default(uuid())
+  required    Boolean   @default(true)
+  traditionId String    @map("tradition_id")
+  taskId      String    @map("task_id")
+  order       Int?
+  tradition   Tradition @relation("traditionTask", fields: [traditionId], references: [id])
+  task        Task      @relation("taskTradition", fields: [taskId], references: [id])
+
+  @@map("traditionTasks")
+}
+
+model ListTask {
+  id     String @id @default(uuid())
+  listId String @map("list_id")
+  taskId String @map("task_id")
+  list   List   @relation("listTask", fields: [listId], references: [id])
+  task   Task   @relation("taskList", fields: [taskId], references: [id])
+
+  @@map("listTasks")
+}
+
+//enums
+enum DayOfWeek {
+  MONDAY
+  TUESDAY
+  WEDNESDAY
+  THURSDAY
+  FRIDAY
+  SATURDAY
+  SUNDAY
+}
+
+enum TaskType {
+  TODO
+  HABIT
+  SMALL
+}
+
+enum TaskStatus {
+  PENDING
+  IN_PROGRESS
+  REJECTED
+  COMPLETED
+  ABANDONED
+}
+
+enum RepeatPeriod {
+  DAILY
+  WEEKLY
+  MONTHLY
+  YEARLY
+}
+
+enum Difficulty {
+  SMALL
+  EASY
+  MEDIUM
+  HARD
+  EPIC
+  LEGENDARY
+}
+
+enum Role {
+  ADMIN
+  MEMBER
+}
