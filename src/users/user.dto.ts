@@ -29,7 +29,14 @@ export class FeatureXpDto {
   @ApiProperty()
   xp: number;
 }
-
+export class LevelDto {
+  @ApiProperty()
+  name: string;
+  @ApiProperty()
+  level: number;
+  @ApiPropertyOptional()
+  url?: string | null;
+}
 export class OutputUserDto {
   @ApiProperty()
   id: string;
@@ -41,6 +48,17 @@ export class OutputUserDto {
   xp: number;
   @ApiProperty()
   gold: number;
+  createdAt: Date;
+  @ApiPropertyOptional()
+  lastEarnedXp?: Date;
   @ApiProperty()
   familyId: string;
+  @ApiProperty({ type: LevelDto })
+  level: LevelDto;
+  @ApiProperty()
+  streak: number;
+  @ApiProperty()
+  productivity: number;
+  @ApiProperty()
+  achievements: number;
 }

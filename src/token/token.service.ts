@@ -1,6 +1,5 @@
-import { InputTokenDto } from './token.dto';
 import { Injectable, UnauthorizedException } from '@nestjs/common';
-
+import { addDays } from 'date-fns';
 import { JwtService } from '@nestjs/jwt';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { v4 } from 'uuid';
@@ -50,8 +49,7 @@ export class TokenService {
 
   async saveRefreshToken(token: string, userId: string) {
     await this.deleteToken(userId);
-    const expires = new Date();
-    expires.setDate(expires.getDate() + 3);
+    const expires = addDays(new Date(), 3);
     await this.prisma.token.create({ data: { token, userId, expires } });
   }
 

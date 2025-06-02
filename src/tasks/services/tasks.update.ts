@@ -1,15 +1,10 @@
 import { Injectable } from '@nestjs/common';
-import {
-  DifficultyXP,
-  InputEditTaskDto,
-  OutputTaskListDto,
-} from '../tasks.dto';
+import { DifficultyXP, InputEditTaskDto } from '../tasks.dto';
 import { PrismaService } from 'src/prisma/prisma.service';
-import { v4 } from 'uuid';
 
-import { RepeatPeriod, TaskStatus, TaskType } from '@prisma/client';
+import { TaskStatus } from '@prisma/client';
 import { SharedService } from 'src/shared/shared.service';
-import { differenceInDays } from 'date-fns';
+import { differenceInDays, isSameDay } from 'date-fns';
 
 @Injectable()
 export class TasksUpdateService {
@@ -40,7 +35,7 @@ export class TasksUpdateService {
       where: { id },
       include: { taskXp: true, user: true },
     });
-
+    const currentLastEarnedXp = task.user.lastEarnedXp;
     let userEarnedXp = 0;
 
     if (!task.taskXp || !task.taskXp.length) {
@@ -49,13 +44,17 @@ export class TasksUpdateService {
         task.user?.lastEarnedXp,
       );
 
+      const updeteData = {
+        lastEarnedXp: new Date(),
+        xp: { increment: userEarnedXp },
+        gold: { increment: task.gold },
+      };
       await this.prisma.user.update({
         where: { id: task.userId },
-        data: {
-          lastEarnedXp: new Date(),
-          xp: { increment: userEarnedXp },
-          gold: { increment: task.gold },
-        },
+        data:
+          !currentLastEarnedXp || !isSameDay(currentLastEarnedXp, new Date())
+            ? { ...updeteData, streak: { increment: 1 } }
+            : updeteData,
       });
     } else {
       await Promise.all(
@@ -164,14 +163,19 @@ export class TasksUpdateService {
         familyId,
         currentUserXp.xp,
       );
+      const updeteData = {
+        lastEarnedXp: new Date(),
+        xp: { increment: userEarnedXp },
+        gold: { increment: task.gold },
+        levelId: newLevel,
+      };
+
       await this.prisma.user.update({
         where: { id: task.userId },
-        data: {
-          lastEarnedXp: new Date(),
-          xp: { increment: userEarnedXp },
-          gold: { increment: task.gold },
-          levelId: newLevel,
-        },
+        data:
+          !currentLastEarnedXp || isSameDay(currentLastEarnedXp, new Date())
+            ? { ...updeteData, streak: { increment: 1 } }
+            : updeteData,
       });
     }
 

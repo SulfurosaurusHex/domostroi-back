@@ -1,7 +1,15 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { Cron, CronExpression } from '@nestjs/schedule';
 import { RepeatPeriod, TaskStatus } from '@prisma/client';
-import { addDays, addMonths, addWeeks, addYears } from 'date-fns';
+import {
+  addDays,
+  addMonths,
+  addWeeks,
+  addYears,
+  isSameDay,
+  startOfDay,
+  subDays,
+} from 'date-fns';
 import { PrismaService } from 'src/prisma/prisma.service';
 
 @Injectable()
@@ -11,6 +19,22 @@ export class TasksService {
 
   @Cron(CronExpression.EVERY_DAY_AT_MIDNIGHT)
   async dailyCron() {
+    const yesterday = startOfDay(subDays(new Date(), 1));
+
+    const users = await this.prisma.user.findMany();
+
+    for (const user of users) {
+      await this.prisma.user.update({
+        where: { id: user.id },
+        data: {
+          streak:
+            !user.lastEarnedXp || !isSameDay(user.lastEarnedXp, yesterday)
+              ? 0
+              : { increment: 1 },
+        },
+      });
+    }
+
     const tasks = await this.prisma.task.findMany({
       where: {
         repeatPeriod: { not: null },

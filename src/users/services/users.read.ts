@@ -1,4 +1,5 @@
 import { Injectable } from '@nestjs/common';
+import { startOfWeek } from 'date-fns';
 
 import { PrismaService } from 'src/prisma/prisma.service';
 
@@ -22,11 +23,26 @@ export class UsersReadService {
     });
   }
 
-  async findUser(id: string) {
-    return await this.prisma.user.findUnique({
-      omit: { password: true, lastEarnedXp: true, role: true },
-      where: { id },
+  async streakInfo(userId: string) {
+    const productivity = await this.prisma.taskCompletion.count({
+      where: { userId, completedAt: { gte: startOfWeek(new Date()) } },
     });
+
+    const achievements = await this.prisma.userAchievements.count({
+      where: { userId },
+    });
+
+    return { productivity, achievements };
+  }
+
+  async findUser(id: string) {
+    const streakInfo = await this.streakInfo(id);
+    const userInfo = await this.prisma.user.findUnique({
+      where: { id },
+      omit: { password: true, role: true, levelId: true },
+      include: { level: { omit: { xp: true, id: true, familyId: true } } },
+    });
+    return { ...userInfo, ...streakInfo };
   }
 
   /*  async getUserWishes(id: string) {

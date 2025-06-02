@@ -23,27 +23,29 @@ model Family {
 }
 
 model User {
-  id           String           @id @default(uuid())
-  name         String           @unique
-  email        String?          @unique
-  password     String
-  xp           Int              @default(0)
-  lastEarnedXp DateTime?        @map("last_earned_xp")
-  gold         Int              @default(0)
-  createdAt    DateTime         @default(now()) @map("created_at")
-  role         Role             @default(MEMBER)
-  familyId     String           @map("family_id")
-  family       Family           @relation("userFamily", fields: [familyId], references: [id])
-  levelId      String           @map("level_id")
-  level        Level            @relation("userLevel", fields: [levelId], references: [id])
-  createdTasks Task[]           @relation("createdTask")
-  userTasks    Task[]           @relation("userTask")
-  userFeatures UserFeature[]    @relation("userFeture")
-  userSkills   UserSkill[]      @relation("userSkill")
-  tokens       Token[]          @relation("userToken")
-  completions  TaskCompletion[] @relation("userCompletion")
-  lists        List[]           @relation("userLists")
-  goals        Goal[]           @relation("userGoals")
+  id               String             @id @default(uuid())
+  name             String             @unique
+  email            String?            @unique
+  password         String
+  xp               Int                @default(0)
+  lastEarnedXp     DateTime?          @map("last_earned_xp")
+  streak           Int                @default(0)
+  gold             Int                @default(0)
+  createdAt        DateTime           @default(now()) @map("created_at")
+  role             Role               @default(MEMBER)
+  familyId         String             @map("family_id")
+  family           Family             @relation("userFamily", fields: [familyId], references: [id])
+  levelId          String             @map("level_id")
+  level            Level              @relation("userLevel", fields: [levelId], references: [id])
+  createdTasks     Task[]             @relation("createdTask")
+  userTasks        Task[]             @relation("userTask")
+  userFeatures     UserFeature[]      @relation("userFeture")
+  userSkills       UserSkill[]        @relation("userSkill")
+  tokens           Token[]            @relation("userToken")
+  completions      TaskCompletion[]   @relation("userCompletion")
+  lists            List[]             @relation("userLists")
+  goals            Goal[]             @relation("userGoals")
+  userAchievements UserAchievements[] @relation("userAchievements")
 
   @@map("users")
 }
@@ -97,6 +99,13 @@ model Level {
 
   @@unique([level, familyId], name: "uniqueLevelFamily")
   @@map("levels")
+}
+
+model Achievement {
+  id               String             @id @default(uuid())
+  name             String
+  description      String?
+  userAchievements UserAchievements[] @relation("achievementsUser")
 }
 
 //tasks
@@ -279,6 +288,16 @@ model ListTask {
   task   Task   @relation("taskList", fields: [taskId], references: [id])
 
   @@map("listTasks")
+}
+
+model UserAchievements {
+  achievementId String
+  achievement   Achievement @relation("achievementsUser", fields: [achievementId], references: [id])
+  userId        String
+  user          User        @relation("userAchievements", fields: [userId], references: [id])
+  earnedAt      DateTime
+
+  @@id(name: "userAchievement", [achievementId, userId])
 }
 
 //enums
