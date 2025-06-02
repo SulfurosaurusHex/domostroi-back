@@ -9,6 +9,8 @@ import { Role } from '@prisma/client';
 export enum Abilities {
   ASSIGN_TASK = 'ASSIGN_TASK',
   CREATE_SKILL = 'CREATE_SKILL',
+  ADD_ATTACHABLES = 'ADD_ATTACHABLES',
+  CREATE_THEME = 'CREATE_THEME',
 }
 
 export enum Crud {

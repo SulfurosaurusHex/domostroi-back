@@ -14,9 +14,12 @@ export class ListsService {
     if (role === Role.ADMIN) {
       abilityArray.create.push(Abilities.ASSIGN_TASK);
       abilityArray.create.push(Abilities.CREATE_SKILL);
+      abilityArray.update.push(Abilities.CREATE_SKILL);
     }
 
     if (isPayed) {
+      abilityArray.create.push(Abilities.ADD_ATTACHABLES);
+      abilityArray.create.push(Abilities.CREATE_THEME);
     }
 
     return abilityArray;

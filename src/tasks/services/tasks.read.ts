@@ -1,7 +1,7 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { Role, TaskStatus, TaskType } from '@prisma/client';
-import { TaskQueryDto } from '../tasks.dto';
+import { HabitQueryDto, TaskQueryDto } from '../tasks.dto';
 import { isBefore } from 'date-fns';
 @Injectable()
 export class TasksReadService {
@@ -87,5 +87,24 @@ export class TasksReadService {
     return tasks.users
       .flatMap((member) => member.userTasks)
       .sort((a, b) => (isBefore(a.createdAt, b.createdAt) ? 1 : -1));
+  }
+
+  async getHabbits(userId: string, query: HabitQueryDto) {
+    let where: any = { userId, task: { type: TaskType.HABIT } };
+    if (query.dateFrom) where.completedAt = { gte: query.dateFrom };
+    if (query.dateTo) where.completedAt = { lte: query.dateTo };
+    return await this.prisma.taskCompletion.findMany({
+      where,
+      select: {
+        completedAt: true,
+        task: {
+          select: {
+            title: true,
+            description: true,
+            id: true,
+          },
+        },
+      },
+    });
   }
 }

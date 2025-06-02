@@ -24,6 +24,8 @@ import {
   OutputTaskDto,
   OutputTaskItemDto,
   TaskQueryDto,
+  OutputHabitsDto,
+  HabitQueryDto,
 } from './tasks.dto';
 import {
   ApiTags,
@@ -59,8 +61,8 @@ export class TasksController {
   })
   @ApiQuery({ name: 'limit', type: Number })
   @ApiQuery({ name: 'offset', type: Number })
-  @ApiQuery({ name: 'dateFrom', type: Date })
-  @ApiQuery({ name: 'dateTo', type: Date })
+  @ApiQuery({ name: 'dateFrom', type: Date, required: false })
+  @ApiQuery({ name: 'dateTo', type: Date, required: false })
   async findTasksForUser(
     @Req() request: RequestWithId,
     @Query() query: TaskQueryDto,
@@ -78,6 +80,17 @@ export class TasksController {
   @ApiOkResponse({ type: [OutputTaskDto] })
   async findTasksForApproval(@Req() request: RequestWithId) {
     return await this.tasksReadService.findTasksForApproval(request.familyId);
+  }
+
+  @Get('/habbits')
+  @ApiOkResponse({ type: [OutputHabitsDto] })
+  @ApiQuery({ name: 'dateFrom', type: Date, required: false })
+  @ApiQuery({ name: 'dateTo', type: Date, required: false })
+  async getHabbits(
+    @Req() request: RequestWithId,
+    @Query() query: HabitQueryDto,
+  ): Promise<OutputHabitsDto[]> {
+    return await this.tasksReadService.getHabbits(request.userId, query);
   }
 
   @Post()

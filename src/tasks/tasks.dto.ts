@@ -4,6 +4,7 @@ import {
   ApiSchema,
   OmitType,
   PartialType,
+  PickType,
 } from '@nestjs/swagger';
 import {
   DayOfWeek,
@@ -123,4 +124,24 @@ export class TaskQueryDto {
   offset: number;
   dateFrom?: Date;
   dateTo?: Date;
+}
+
+export class HabitQueryDto extends PickType(TaskQueryDto, [
+  'dateFrom',
+  'dateTo',
+]) {}
+
+class TaskInfoDto {
+  @ApiProperty()
+  id: string;
+  @ApiPropertyOptional()
+  description?: string;
+  @ApiProperty()
+  title: string;
+}
+export class OutputHabitsDto {
+  @ApiProperty()
+  completedAt: Date;
+  @ApiProperty({ type: TaskInfoDto })
+  task: TaskInfoDto;
 }
