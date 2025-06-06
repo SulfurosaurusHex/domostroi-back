@@ -28,7 +28,7 @@ export class UsersReadService {
       where: { userId, completedAt: { gte: startOfWeek(new Date()) } },
     });
 
-    const achievements = await this.prisma.userAchievements.count({
+    const achievements = await this.prisma.userAchievement.count({
       where: { userId },
     });
 

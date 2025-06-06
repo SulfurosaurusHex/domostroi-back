@@ -11,7 +11,7 @@ export class TasksCreateService {
   ) {
     const userId = data.asigneeId ? data.asigneeId : data.contextId;
     const creatorId = data.asigneeId ? data.contextId : undefined;
-
+    console.log('data', data);
     const createdTask = await this.prisma.task.create({
       data: {
         userId,
@@ -40,14 +40,14 @@ export class TasksCreateService {
       })),
     });
 
-    await this.prisma.taskXp.createMany({
+    const feat = await this.prisma.taskXp.createManyAndReturn({
       data: data.features.map((feature) => ({
         taskId: createdTask.id,
         featureId: feature.id,
         featurePercent: feature.percent,
       })),
     });
-
+    console.log('feat', feat);
     return { id: createdTask.id };
   }
 

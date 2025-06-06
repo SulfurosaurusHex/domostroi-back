@@ -13,11 +13,16 @@ model Family {
   name       String
   createdAt  DateTime    @default(now()) @map("created_at")
   payed      Boolean     @default(false)
+    trialEndsAt DateTime?
+subscription        Subscription? 
+subscriptionId      Int?	
   users      User[]      @relation("userFamily")
   tasks      Task[]      @relation("familyTasks")
   skills     Skill[]     @relation("familySkills")
   traditions Tradition[] @relation("failyTraditions")
   levels     Level[]     @relation("familyLevels")
+  menus WeeklyMenu[]
+newsFeed NewsFeedItem[]
 
   @@map("families")
 }
@@ -45,7 +50,20 @@ model User {
   completions      TaskCompletion[]   @relation("userCompletion")
   lists            List[]             @relation("userLists")
   goals            Goal[]             @relation("userGoals")
-  userAchievements UserAchievements[] @relation("userAchievements")
+  userAchievements UserAchievement[] @relation("userAchievements")
+  userStats UserStats[]
+  userLogs UserLog[]
+
+  //
+
+currentTheme        String             @default("The Hearthfire")	
+logs Log[] @relation("userLogs")
+wishlist WishlistItem[]
+reactions Reaction[]
+
+menuSuggestions MenuSuggestion[]
+notifications Notification[]
+newsFeedItems NewsFeedItem[]
 
   @@map("users")
 }
@@ -105,7 +123,18 @@ model Achievement {
   id               String             @id @default(uuid())
   name             String
   description      String?
-  userAchievements UserAchievements[] @relation("achievementsUser")
+  userAchievements UserAchievement[] @relation("achievementsUser")
+
+  //
+  xpReward    Int
+badgeUrl    String?
+criteriaType CriteriaType
+criteriaValue Int
+
+
+
+
+
 }
 
 //tasks
@@ -220,7 +249,7 @@ model UserFeature {
 }
 
 model FeatureSkill {
-  percent   Int
+  percent   Float
   featureId String  @map("feature_id")
   skillId   String  @map("skill_id")
   feature   Feature @relation("featureSkill", fields: [featureId], references: [id])
@@ -246,9 +275,9 @@ model TaskXp {
   id             String   @id @default(uuid())
   taskId         String   @map("user_id")
   skillId        String?  @map("skill_id")
-  skillPercent   Int?     @map("skill_percent")
+  skillPercent   Float?   @map("skill_percent")
   featureId      String?  @map("feature_id")
-  featurePercent Int?     @map("feature_percent")
+  featurePercent Float?   @map("feature_percent")
   task           Task     @relation("taskXp", fields: [taskId], references: [id])
   skill          Skill?   @relation("skillTaskXp", fields: [skillId], references: [id])
   feature        Feature? @relation("featureTaskXp", fields: [featureId], references: [id])
@@ -290,7 +319,7 @@ model ListTask {
   @@map("listTasks")
 }
 
-model UserAchievements {
+model UserAchievement {
   achievementId String
   achievement   Achievement @relation("achievementsUser", fields: [achievementId], references: [id])
   userId        String
@@ -298,6 +327,110 @@ model UserAchievements {
   earnedAt      DateTime
 
   @@id(name: "userAchievement", [achievementId, userId])
+}
+
+
+//
+model NewsFeedItem {
+id String @id @default(uuid())
+familyId String
+family Family @relation(fields: [familyId], references: [id])
+userId String
+user User @relation(fields: [userId], references: [id])
+message String
+createdAt DateTime @default(now())
+reactions Reaction[]
+}
+
+model Reaction {
+id String @id @default(uuid())
+newsItemId String
+newsItem NewsFeedItem @relation(fields: [newsItemId], references: [id])
+userId String
+user User @relation(fields: [userId], references: [id])
+emoji String
+createdAt DateTime @default(now())
+}
+
+model Log {
+id String @id @default(uuid())
+type String
+date DateTime
+userId String
+user User? @relation("userLogs", fields: [userId], references: [id])
+}
+
+model WishlistItem {
+id String @id @default(uuid())
+title String
+description String?
+type WishlistType
+priority Int
+addedAt DateTime @default(now())
+userId String
+user User @relation(fields: [userId], references: [id])
+}
+
+model WeeklyMenu {
+id String @id @default(uuid())
+familyId String
+family Family @relation(fields: [familyId], references: [id])
+startDate DateTime
+endDate DateTime
+suggestions MenuSuggestion[]
+}
+
+model MenuSuggestion {
+id String @id @default(cuid())
+dayOfWeek DayOfWeek
+mealType MealType
+description String
+userId String
+user User @relation(fields: [userId], references: [id])
+menuId String
+menu WeeklyMenu @relation(fields: [menuId], references: [id])
+}
+
+model UserStats {	
+id        String      @id @default(uuid())	
+userId    String	
+date      DateTime	
+tasksCompleted Int	
+choresCompleted Int	
+focusMinutes Int	
+user      User   @relation(fields: [userId], references: [id])	
+}	
+
+
+model UserLog {	
+id        String       @id @default(uuid())	
+userId    String	
+event     String	
+category  String    // task, theme, level, streak	
+metadata  Json?	
+createdAt DateTime  @default(now())	
+user      User      @relation(fields: [userId], references: [id])	
+}	
+	
+
+model Subscription {
+id              String     @id @default(uuid())	
+familyId          String     @unique	
+family            Family    @relation(fields: [familyId], references: [id])	
+providerId      String
+status          SubscriptionStatus  @default(NONE) 
+planType        SubscriptionType  @default(NONE)
+currentPeriodEnd DateTime	
+}
+
+model Notification {
+id          String   @id @default(uuid())
+userId      String
+user        User     @relation(fields: [userId], references: [id])
+type        NotificationType
+message     String
+read        Boolean  @default(false)
+createdAt   DateTime @default(now())
 }
 
 //enums
@@ -344,4 +477,47 @@ enum Difficulty {
 enum Role {
   ADMIN
   MEMBER
+}
+
+enum MealType {
+BREAKFAST
+LUNCH
+DINNER
+SNACK
+}
+
+enum WishlistType {
+MOVIE
+BOOK
+GAME
+SHOW
+}
+
+enum CriteriaType {
+TRADITION_COUNT
+FAMILY_TASKS_COMPLETED
+TASK_COUNT
+STREAK_DAYS
+SKILL_LEVEL
+FAMILY_CONTRIBUTION
+}
+
+enum NotificationType {
+TASK_ASSIGNMENT
+ACHIEVEMENT_UNLOCKED
+MENU_UPDATE
+FAMILY_ACTIVITY
+}
+
+enum SubscriptionStatus {
+  ACTIVE 
+  TRIEL
+  CANCELLED
+  NONE
+}
+
+enum SubscriptionType {
+  MONTHLY
+  ONECE
+  NONE
 }

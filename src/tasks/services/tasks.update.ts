@@ -130,7 +130,7 @@ export class TasksUpdateService {
                 DifficultyXP[task.difficulty].xp,
                 userFeature?.lastEarnedXp,
               ) * taskXp.featurePercent;
-            console.log('featurexp', featureXp);
+
             userEarnedXp += featureXp;
 
             await this.prisma.userFeature.upsert({
@@ -161,8 +161,9 @@ export class TasksUpdateService {
       });
       const newLevel = await this.sharedService.recalculateLevel(
         familyId,
-        currentUserXp.xp,
+        currentUserXp.xp + userEarnedXp,
       );
+      console.log('newLevel', newLevel);
       const updeteData = {
         lastEarnedXp: new Date(),
         xp: { increment: userEarnedXp },

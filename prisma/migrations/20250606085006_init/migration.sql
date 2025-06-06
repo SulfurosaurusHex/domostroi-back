@@ -16,12 +16,32 @@ CREATE TYPE "Difficulty" AS ENUM ('SMALL', 'EASY', 'MEDIUM', 'HARD', 'EPIC', 'LE
 -- CreateEnum
 CREATE TYPE "Role" AS ENUM ('ADMIN', 'MEMBER');
 
+-- CreateEnum
+CREATE TYPE "MealType" AS ENUM ('BREAKFAST', 'LUNCH', 'DINNER', 'SNACK');
+
+-- CreateEnum
+CREATE TYPE "WishlistType" AS ENUM ('MOVIE', 'BOOK', 'GAME', 'SHOW');
+
+-- CreateEnum
+CREATE TYPE "CriteriaType" AS ENUM ('TRADITION_COUNT', 'FAMILY_TASKS_COMPLETED', 'TASK_COUNT', 'STREAK_DAYS', 'SKILL_LEVEL', 'FAMILY_CONTRIBUTION');
+
+-- CreateEnum
+CREATE TYPE "NotificationType" AS ENUM ('TASK_ASSIGNMENT', 'ACHIEVEMENT_UNLOCKED', 'MENU_UPDATE', 'FAMILY_ACTIVITY');
+
+-- CreateEnum
+CREATE TYPE "SubscriptionStatus" AS ENUM ('ACTIVE', 'TRIEL', 'CANCELLED', 'NONE');
+
+-- CreateEnum
+CREATE TYPE "SubscriptionType" AS ENUM ('MONTHLY', 'ONECE', 'NONE');
+
 -- CreateTable
 CREATE TABLE "families" (
     "id" TEXT NOT NULL,
     "name" TEXT NOT NULL,
     "created_at" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "payed" BOOLEAN NOT NULL DEFAULT false,
+    "trialEndsAt" TIMESTAMP(3),
+    "subscriptionId" INTEGER,
 
     CONSTRAINT "families_pkey" PRIMARY KEY ("id")
 );
@@ -34,11 +54,13 @@ CREATE TABLE "users" (
     "password" TEXT NOT NULL,
     "xp" INTEGER NOT NULL DEFAULT 0,
     "last_earned_xp" TIMESTAMP(3),
+    "streak" INTEGER NOT NULL DEFAULT 0,
     "gold" INTEGER NOT NULL DEFAULT 0,
     "created_at" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "role" "Role" NOT NULL DEFAULT 'MEMBER',
     "family_id" TEXT NOT NULL,
     "level_id" TEXT NOT NULL,
+    "currentTheme" TEXT NOT NULL DEFAULT 'The Hearthfire',
 
     CONSTRAINT "users_pkey" PRIMARY KEY ("id")
 );
@@ -82,6 +104,19 @@ CREATE TABLE "levels" (
     "familyId" TEXT NOT NULL,
 
     CONSTRAINT "levels_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateTable
+CREATE TABLE "Achievement" (
+    "id" TEXT NOT NULL,
+    "name" TEXT NOT NULL,
+    "description" TEXT,
+    "xpReward" INTEGER NOT NULL,
+    "badgeUrl" TEXT,
+    "criteriaType" "CriteriaType" NOT NULL,
+    "criteriaValue" INTEGER NOT NULL,
+
+    CONSTRAINT "Achievement_pkey" PRIMARY KEY ("id")
 );
 
 -- CreateTable
@@ -179,7 +214,7 @@ CREATE TABLE "userFeatures" (
 
 -- CreateTable
 CREATE TABLE "featureSkills" (
-    "percent" INTEGER NOT NULL,
+    "percent" DOUBLE PRECISION NOT NULL,
     "feature_id" TEXT NOT NULL,
     "skill_id" TEXT NOT NULL,
 
@@ -201,9 +236,9 @@ CREATE TABLE "taskXp" (
     "id" TEXT NOT NULL,
     "user_id" TEXT NOT NULL,
     "skill_id" TEXT,
-    "skill_percent" INTEGER,
+    "skill_percent" DOUBLE PRECISION,
     "feature_id" TEXT,
-    "feature_percent" INTEGER,
+    "feature_percent" DOUBLE PRECISION,
 
     CONSTRAINT "taskXp_pkey" PRIMARY KEY ("id")
 );
@@ -239,6 +274,130 @@ CREATE TABLE "listTasks" (
     CONSTRAINT "listTasks_pkey" PRIMARY KEY ("id")
 );
 
+-- CreateTable
+CREATE TABLE "UserAchievement" (
+    "achievementId" TEXT NOT NULL,
+    "userId" TEXT NOT NULL,
+    "earnedAt" TIMESTAMP(3) NOT NULL,
+
+    CONSTRAINT "UserAchievement_pkey" PRIMARY KEY ("achievementId","userId")
+);
+
+-- CreateTable
+CREATE TABLE "NewsFeedItem" (
+    "id" TEXT NOT NULL,
+    "familyId" TEXT NOT NULL,
+    "userId" TEXT NOT NULL,
+    "message" TEXT NOT NULL,
+    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+
+    CONSTRAINT "NewsFeedItem_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateTable
+CREATE TABLE "Reaction" (
+    "id" TEXT NOT NULL,
+    "newsItemId" TEXT NOT NULL,
+    "userId" TEXT NOT NULL,
+    "emoji" TEXT NOT NULL,
+    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+
+    CONSTRAINT "Reaction_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateTable
+CREATE TABLE "Log" (
+    "id" TEXT NOT NULL,
+    "type" TEXT NOT NULL,
+    "date" TIMESTAMP(3) NOT NULL,
+    "userId" TEXT NOT NULL,
+
+    CONSTRAINT "Log_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateTable
+CREATE TABLE "WishlistItem" (
+    "id" TEXT NOT NULL,
+    "title" TEXT NOT NULL,
+    "description" TEXT,
+    "type" "WishlistType" NOT NULL,
+    "priority" INTEGER NOT NULL,
+    "addedAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "userId" TEXT NOT NULL,
+
+    CONSTRAINT "WishlistItem_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateTable
+CREATE TABLE "WeeklyMenu" (
+    "id" TEXT NOT NULL,
+    "familyId" TEXT NOT NULL,
+    "startDate" TIMESTAMP(3) NOT NULL,
+    "endDate" TIMESTAMP(3) NOT NULL,
+
+    CONSTRAINT "WeeklyMenu_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateTable
+CREATE TABLE "MenuSuggestion" (
+    "id" TEXT NOT NULL,
+    "dayOfWeek" "DayOfWeek" NOT NULL,
+    "mealType" "MealType" NOT NULL,
+    "description" TEXT NOT NULL,
+    "userId" TEXT NOT NULL,
+    "menuId" TEXT NOT NULL,
+
+    CONSTRAINT "MenuSuggestion_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateTable
+CREATE TABLE "UserStats" (
+    "id" TEXT NOT NULL,
+    "userId" TEXT NOT NULL,
+    "date" TIMESTAMP(3) NOT NULL,
+    "tasksCompleted" INTEGER NOT NULL,
+    "choresCompleted" INTEGER NOT NULL,
+    "focusMinutes" INTEGER NOT NULL,
+
+    CONSTRAINT "UserStats_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateTable
+CREATE TABLE "UserLog" (
+    "id" TEXT NOT NULL,
+    "userId" TEXT NOT NULL,
+    "event" TEXT NOT NULL,
+    "category" TEXT NOT NULL,
+    "metadata" JSONB,
+    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+
+    CONSTRAINT "UserLog_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateTable
+CREATE TABLE "Subscription" (
+    "id" TEXT NOT NULL,
+    "familyId" TEXT NOT NULL,
+    "providerId" TEXT NOT NULL,
+    "status" "SubscriptionStatus" NOT NULL DEFAULT 'NONE',
+    "planType" "SubscriptionType" NOT NULL DEFAULT 'NONE',
+    "currentPeriodEnd" TIMESTAMP(3) NOT NULL,
+
+    CONSTRAINT "Subscription_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateTable
+CREATE TABLE "Notification" (
+    "id" TEXT NOT NULL,
+    "userId" TEXT NOT NULL,
+    "type" "NotificationType" NOT NULL,
+    "message" TEXT NOT NULL,
+    "read" BOOLEAN NOT NULL DEFAULT false,
+    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+
+    CONSTRAINT "Notification_pkey" PRIMARY KEY ("id")
+);
+
 -- CreateIndex
 CREATE UNIQUE INDEX "users_name_key" ON "users"("name");
 
@@ -250,6 +409,9 @@ CREATE UNIQUE INDEX "levels_level_familyId_key" ON "levels"("level", "familyId")
 
 -- CreateIndex
 CREATE UNIQUE INDEX "lists_title_user_id_key" ON "lists"("title", "user_id");
+
+-- CreateIndex
+CREATE UNIQUE INDEX "Subscription_familyId_key" ON "Subscription"("familyId");
 
 -- AddForeignKey
 ALTER TABLE "users" ADD CONSTRAINT "users_family_id_fkey" FOREIGN KEY ("family_id") REFERENCES "families"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
@@ -340,3 +502,48 @@ ALTER TABLE "listTasks" ADD CONSTRAINT "listTasks_list_id_fkey" FOREIGN KEY ("li
 
 -- AddForeignKey
 ALTER TABLE "listTasks" ADD CONSTRAINT "listTasks_task_id_fkey" FOREIGN KEY ("task_id") REFERENCES "tasks"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "UserAchievement" ADD CONSTRAINT "UserAchievement_achievementId_fkey" FOREIGN KEY ("achievementId") REFERENCES "Achievement"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "UserAchievement" ADD CONSTRAINT "UserAchievement_userId_fkey" FOREIGN KEY ("userId") REFERENCES "users"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "NewsFeedItem" ADD CONSTRAINT "NewsFeedItem_familyId_fkey" FOREIGN KEY ("familyId") REFERENCES "families"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "NewsFeedItem" ADD CONSTRAINT "NewsFeedItem_userId_fkey" FOREIGN KEY ("userId") REFERENCES "users"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "Reaction" ADD CONSTRAINT "Reaction_newsItemId_fkey" FOREIGN KEY ("newsItemId") REFERENCES "NewsFeedItem"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "Reaction" ADD CONSTRAINT "Reaction_userId_fkey" FOREIGN KEY ("userId") REFERENCES "users"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "Log" ADD CONSTRAINT "Log_userId_fkey" FOREIGN KEY ("userId") REFERENCES "users"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "WishlistItem" ADD CONSTRAINT "WishlistItem_userId_fkey" FOREIGN KEY ("userId") REFERENCES "users"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "WeeklyMenu" ADD CONSTRAINT "WeeklyMenu_familyId_fkey" FOREIGN KEY ("familyId") REFERENCES "families"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "MenuSuggestion" ADD CONSTRAINT "MenuSuggestion_userId_fkey" FOREIGN KEY ("userId") REFERENCES "users"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "MenuSuggestion" ADD CONSTRAINT "MenuSuggestion_menuId_fkey" FOREIGN KEY ("menuId") REFERENCES "WeeklyMenu"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "UserStats" ADD CONSTRAINT "UserStats_userId_fkey" FOREIGN KEY ("userId") REFERENCES "users"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "UserLog" ADD CONSTRAINT "UserLog_userId_fkey" FOREIGN KEY ("userId") REFERENCES "users"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "Subscription" ADD CONSTRAINT "Subscription_familyId_fkey" FOREIGN KEY ("familyId") REFERENCES "families"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "Notification" ADD CONSTRAINT "Notification_userId_fkey" FOREIGN KEY ("userId") REFERENCES "users"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
