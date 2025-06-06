@@ -9,61 +9,55 @@ datasource db {
 
 //user
 model Family {
-  id         String      @id @default(uuid())
-  name       String
-  createdAt  DateTime    @default(now()) @map("created_at")
-  payed      Boolean     @default(false)
-    trialEndsAt DateTime?
-subscription        Subscription? 
-subscriptionId      Int?	
-  users      User[]      @relation("userFamily")
-  tasks      Task[]      @relation("familyTasks")
-  skills     Skill[]     @relation("familySkills")
-  traditions Tradition[] @relation("failyTraditions")
-  levels     Level[]     @relation("familyLevels")
-  menus WeeklyMenu[]
-newsFeed NewsFeedItem[]
+  id             String         @id @default(uuid())
+  name           String
+  createdAt      DateTime       @default(now()) @map("created_at")
+  payed          Boolean        @default(false)
+  trialEndsAt    DateTime?
+  subscription   Subscription?
+  subscriptionId Int?
+  users          User[]         @relation("userFamily")
+  tasks          Task[]         @relation("familyTasks")
+  skills         Skill[]        @relation("familySkills")
+  traditions     Tradition[]    @relation("failyTraditions")
+  levels         Level[]        @relation("familyLevels")
+  menus          WeeklyMenu[]
+  newsFeed       NewsFeedItem[]
 
   @@map("families")
 }
 
 model User {
-  id               String             @id @default(uuid())
-  name             String             @unique
-  email            String?            @unique
+  id               String            @id @default(uuid())
+  name             String            @unique
+  email            String?           @unique
   password         String
-  xp               Int                @default(0)
-  lastEarnedXp     DateTime?          @map("last_earned_xp")
-  streak           Int                @default(0)
-  gold             Int                @default(0)
-  createdAt        DateTime           @default(now()) @map("created_at")
-  role             Role               @default(MEMBER)
-  familyId         String             @map("family_id")
-  family           Family             @relation("userFamily", fields: [familyId], references: [id])
-  levelId          String             @map("level_id")
-  level            Level              @relation("userLevel", fields: [levelId], references: [id])
-  createdTasks     Task[]             @relation("createdTask")
-  userTasks        Task[]             @relation("userTask")
-  userFeatures     UserFeature[]      @relation("userFeture")
-  userSkills       UserSkill[]        @relation("userSkill")
-  tokens           Token[]            @relation("userToken")
-  completions      TaskCompletion[]   @relation("userCompletion")
-  lists            List[]             @relation("userLists")
-  goals            Goal[]             @relation("userGoals")
+  xp               Int               @default(0)
+  lastEarnedXp     DateTime?         @map("last_earned_xp")
+  streak           Int               @default(0)
+  gold             Int               @default(0)
+  createdAt        DateTime          @default(now()) @map("created_at")
+  role             Role              @default(MEMBER)
+  familyId         String            @map("family_id")
+  family           Family            @relation("userFamily", fields: [familyId], references: [id])
+  levelId          String            @map("level_id")
+  level            Level             @relation("userLevel", fields: [levelId], references: [id])
+  createdTasks     Task[]            @relation("createdTask")
+  userTasks        Task[]            @relation("userTask")
+  userFeatures     UserFeature[]     @relation("userFeture")
+  userSkills       UserSkill[]       @relation("userSkill")
+  tokens           Token[]           @relation("userToken")
+  completions      TaskCompletion[]  @relation("userCompletion")
+  lists            List[]            @relation("userLists")
+  goals            Goal[]            @relation("userGoals")
   userAchievements UserAchievement[] @relation("userAchievements")
-  userStats UserStats[]
-  userLogs UserLog[]
-
-  //
-
-currentTheme        String             @default("The Hearthfire")	
-logs Log[] @relation("userLogs")
-wishlist WishlistItem[]
-reactions Reaction[]
-
-menuSuggestions MenuSuggestion[]
-notifications Notification[]
-newsFeedItems NewsFeedItem[]
+  userStats        UserStats[]
+  userLogs         UserLog[]
+  wishlist         WishlistItem[]
+  reactions        Reaction[]
+  menuSuggestions  MenuSuggestion[]
+  notifications    Notification[]
+  newsFeedItems    NewsFeedItem[]
 
   @@map("users")
 }
@@ -120,21 +114,16 @@ model Level {
 }
 
 model Achievement {
-  id               String             @id @default(uuid())
+  id               String            @id @default(uuid())
   name             String
   description      String?
   userAchievements UserAchievement[] @relation("achievementsUser")
 
   //
-  xpReward    Int
-badgeUrl    String?
-criteriaType CriteriaType
-criteriaValue Int
-
-
-
-
-
+  xpReward      Int
+  badgeUrl      String?
+  criteriaType  CriteriaType
+  criteriaValue Int
 }
 
 //tasks
@@ -329,108 +318,97 @@ model UserAchievement {
   @@id(name: "userAchievement", [achievementId, userId])
 }
 
-
 //
 model NewsFeedItem {
-id String @id @default(uuid())
-familyId String
-family Family @relation(fields: [familyId], references: [id])
-userId String
-user User @relation(fields: [userId], references: [id])
-message String
-createdAt DateTime @default(now())
-reactions Reaction[]
+  id        String     @id @default(uuid())
+  familyId  String
+  family    Family     @relation(fields: [familyId], references: [id])
+  userId    String
+  user      User       @relation(fields: [userId], references: [id])
+  message   String
+  createdAt DateTime   @default(now())
+  reactions Reaction[]
 }
 
 model Reaction {
-id String @id @default(uuid())
-newsItemId String
-newsItem NewsFeedItem @relation(fields: [newsItemId], references: [id])
-userId String
-user User @relation(fields: [userId], references: [id])
-emoji String
-createdAt DateTime @default(now())
-}
-
-model Log {
-id String @id @default(uuid())
-type String
-date DateTime
-userId String
-user User? @relation("userLogs", fields: [userId], references: [id])
+  id         String       @id @default(uuid())
+  newsItemId String
+  newsItem   NewsFeedItem @relation(fields: [newsItemId], references: [id])
+  userId     String
+  user       User         @relation(fields: [userId], references: [id])
+  emoji      String
+  createdAt  DateTime     @default(now())
 }
 
 model WishlistItem {
-id String @id @default(uuid())
-title String
-description String?
-type WishlistType
-priority Int
-addedAt DateTime @default(now())
-userId String
-user User @relation(fields: [userId], references: [id])
+  id          String       @id @default(uuid())
+  title       String
+  description String?
+  type        WishlistType
+  priority    Int
+  addedAt     DateTime     @default(now())
+  userId      String
+  user        User         @relation(fields: [userId], references: [id])
 }
 
 model WeeklyMenu {
-id String @id @default(uuid())
-familyId String
-family Family @relation(fields: [familyId], references: [id])
-startDate DateTime
-endDate DateTime
-suggestions MenuSuggestion[]
+  id          String           @id @default(uuid())
+  familyId    String
+  family      Family           @relation(fields: [familyId], references: [id])
+  startDate   DateTime
+  endDate     DateTime
+  suggestions MenuSuggestion[]
 }
 
 model MenuSuggestion {
-id String @id @default(cuid())
-dayOfWeek DayOfWeek
-mealType MealType
-description String
-userId String
-user User @relation(fields: [userId], references: [id])
-menuId String
-menu WeeklyMenu @relation(fields: [menuId], references: [id])
+  id          String     @id @default(cuid())
+  dayOfWeek   DayOfWeek
+  mealType    MealType
+  description String
+  userId      String
+  user        User       @relation(fields: [userId], references: [id])
+  menuId      String
+  menu        WeeklyMenu @relation(fields: [menuId], references: [id])
 }
 
-model UserStats {	
-id        String      @id @default(uuid())	
-userId    String	
-date      DateTime	
-tasksCompleted Int	
-choresCompleted Int	
-focusMinutes Int	
-user      User   @relation(fields: [userId], references: [id])	
-}	
+model UserStats {
+  id              String   @id @default(uuid())
+  userId          String
+  date            DateTime
+  tasksCompleted  Int
+  choresCompleted Int
+  focusMinutes    Int
+  user            User     @relation(fields: [userId], references: [id])
+}
 
-
-model UserLog {	
-id        String       @id @default(uuid())	
-userId    String	
-event     String	
-category  String    // task, theme, level, streak	
-metadata  Json?	
-createdAt DateTime  @default(now())	
-user      User      @relation(fields: [userId], references: [id])	
-}	
-	
+model UserLog {
+  id        String   @id @default(uuid())
+  userId    String
+  event     String
+  category  String // task, theme, level, streak	
+  metadata  Json?
+  createdAt DateTime @default(now())
+  user      User     @relation(fields: [userId], references: [id])
+}
 
 model Subscription {
-id              String     @id @default(uuid())	
-familyId          String     @unique	
-family            Family    @relation(fields: [familyId], references: [id])	
-providerId      String
-status          SubscriptionStatus  @default(NONE) 
-planType        SubscriptionType  @default(NONE)
-currentPeriodEnd DateTime	
+  id               String             @id @default(uuid())
+  familyId         String             @unique
+  family           Family             @relation(fields: [familyId], references: [id])
+  providerId       String
+  status           SubscriptionStatus @default(NONE)
+  planType         SubscriptionType   @default(NONE)
+  currentPeriodEnd DateTime
 }
 
 model Notification {
-id          String   @id @default(uuid())
-userId      String
-user        User     @relation(fields: [userId], references: [id])
-type        NotificationType
-message     String
-read        Boolean  @default(false)
-createdAt   DateTime @default(now())
+  id        String           @id @default(uuid())
+  userId    String
+  user      User             @relation(fields: [userId], references: [id])
+  type      NotificationType
+  message   String
+  read      Boolean          @default(false)
+  createdAt DateTime         @default(now())
 }
 
 //enums
@@ -480,37 +458,37 @@ enum Role {
 }
 
 enum MealType {
-BREAKFAST
-LUNCH
-DINNER
-SNACK
+  BREAKFAST
+  LUNCH
+  DINNER
+  SNACK
 }
 
 enum WishlistType {
-MOVIE
-BOOK
-GAME
-SHOW
+  MOVIE
+  BOOK
+  GAME
+  SHOW
 }
 
 enum CriteriaType {
-TRADITION_COUNT
-FAMILY_TASKS_COMPLETED
-TASK_COUNT
-STREAK_DAYS
-SKILL_LEVEL
-FAMILY_CONTRIBUTION
+  TRADITION_COUNT
+  FAMILY_TASKS_COMPLETED
+  TASK_COUNT
+  STREAK_DAYS
+  SKILL_LEVEL
+  FAMILY_CONTRIBUTION
 }
 
 enum NotificationType {
-TASK_ASSIGNMENT
-ACHIEVEMENT_UNLOCKED
-MENU_UPDATE
-FAMILY_ACTIVITY
+  TASK_ASSIGNMENT
+  ACHIEVEMENT_UNLOCKED
+  MENU_UPDATE
+  FAMILY_ACTIVITY
 }
 
 enum SubscriptionStatus {
-  ACTIVE 
+  ACTIVE
   TRIEL
   CANCELLED
   NONE

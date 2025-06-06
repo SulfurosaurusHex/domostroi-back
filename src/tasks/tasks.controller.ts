@@ -26,6 +26,7 @@ import {
   TaskQueryDto,
   OutputHabitsDto,
   HabitQueryDto,
+  CreateGoalDto,
 } from './tasks.dto';
 import {
   ApiTags,
@@ -122,5 +123,16 @@ export class TasksController {
   @Delete(':id')
   async deleteTask(@Param('id') id: string) {
     return await this.tasksUpdateService.deleteTask(id);
+  }
+
+  @Post('/goal')
+  async createGoal(
+    @Req() request: RequestWithId,
+    @Body() createGoalto: CreateGoalDto,
+  ) {
+    return await this.tasksCreateService.createGoal({
+      ...createGoalto,
+      userId: request.userId,
+    });
   }
 }

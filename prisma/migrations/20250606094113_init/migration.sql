@@ -60,7 +60,6 @@ CREATE TABLE "users" (
     "role" "Role" NOT NULL DEFAULT 'MEMBER',
     "family_id" TEXT NOT NULL,
     "level_id" TEXT NOT NULL,
-    "currentTheme" TEXT NOT NULL DEFAULT 'The Hearthfire',
 
     CONSTRAINT "users_pkey" PRIMARY KEY ("id")
 );
@@ -306,16 +305,6 @@ CREATE TABLE "Reaction" (
 );
 
 -- CreateTable
-CREATE TABLE "Log" (
-    "id" TEXT NOT NULL,
-    "type" TEXT NOT NULL,
-    "date" TIMESTAMP(3) NOT NULL,
-    "userId" TEXT NOT NULL,
-
-    CONSTRAINT "Log_pkey" PRIMARY KEY ("id")
-);
-
--- CreateTable
 CREATE TABLE "WishlistItem" (
     "id" TEXT NOT NULL,
     "title" TEXT NOT NULL,
@@ -520,9 +509,6 @@ ALTER TABLE "Reaction" ADD CONSTRAINT "Reaction_newsItemId_fkey" FOREIGN KEY ("n
 
 -- AddForeignKey
 ALTER TABLE "Reaction" ADD CONSTRAINT "Reaction_userId_fkey" FOREIGN KEY ("userId") REFERENCES "users"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
-
--- AddForeignKey
-ALTER TABLE "Log" ADD CONSTRAINT "Log_userId_fkey" FOREIGN KEY ("userId") REFERENCES "users"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE "WishlistItem" ADD CONSTRAINT "WishlistItem_userId_fkey" FOREIGN KEY ("userId") REFERENCES "users"("id") ON DELETE RESTRICT ON UPDATE CASCADE;

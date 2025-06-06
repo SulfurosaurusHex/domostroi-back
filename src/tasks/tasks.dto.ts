@@ -2,7 +2,6 @@ import {
   ApiProperty,
   ApiPropertyOptional,
   ApiSchema,
-  OmitType,
   PartialType,
   PickType,
 } from '@nestjs/swagger';
@@ -144,4 +143,23 @@ export class OutputHabitsDto {
   completedAt: Date;
   @ApiProperty({ type: TaskInfoDto })
   task: TaskInfoDto;
+}
+
+class GoalTasksDto {
+  @ApiProperty()
+  taskId: string;
+  @ApiPropertyOptional()
+  order?: number;
+}
+export class CreateGoalDto {
+  @ApiProperty()
+  title: string;
+  @ApiPropertyOptional()
+  description?: string;
+  @ApiPropertyOptional()
+  startDate?: Date;
+  @ApiPropertyOptional()
+  deadline?: Date;
+  @ApiProperty({ type: GoalTasksDto, isArray: true })
+  tasks: GoalTasksDto[];
 }

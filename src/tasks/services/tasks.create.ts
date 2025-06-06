@@ -1,5 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import { DifficultyXP, InputCreateTaskDto } from '../tasks.dto';
+import { CreateGoalDto, DifficultyXP, InputCreateTaskDto } from '../tasks.dto';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { Role, TaskStatus } from '@prisma/client';
 
@@ -51,13 +51,7 @@ export class TasksCreateService {
     return { id: createdTask.id };
   }
 
-  async createGoal(data: any & { contextId: string }) {
-    const userId = data.asigneeId ? data.asigneeId : data.contextId;
-    const creatorId = data.asigneeId ? data.contextId : undefined;
-    const user = await this.prisma.user.findUnique({
-      where: { id: userId },
-    });
-
+  async createGoal(data: CreateGoalDto & { userId: string }) {
     const createdGoal = await this.prisma.goal.create({
       data: {
         title: data.title,
@@ -65,14 +59,14 @@ export class TasksCreateService {
         startDate: data.startDate,
         deadline: data.deadline,
         progress: 0,
-        userId: userId,
+        userId: data.userId,
       },
     });
 
     await this.prisma.goalTask.createMany({
-      data: data.tasks.map(async (task, index) => ({
+      data: data.tasks.map((task, index) => ({
         goalId: createdGoal.id,
-        taskId: task.id,
+        taskId: task.taskId,
         order: task.order ?? index,
         completed: false,
       })),
